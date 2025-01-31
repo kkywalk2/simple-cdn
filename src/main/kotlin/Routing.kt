@@ -10,14 +10,14 @@ import io.ktor.client.request.*
 import java.io.File
 import java.security.MessageDigest
 
-val originUrl = System.getenv("CDN_ORIGIN") ?: "https://example.com" // 기본값 설정
+val originUrl = System.getenv("CDN_ORIGIN") ?: "https://example.com"
+val rootDirectory = System.getenv("CDN_ROOT_DIRECTORY") ?: "/Users/user/Downloads"
 
 fun Application.configureRouting() {
     routing {
         get("/cdn/{filename}") {
-            val filename =
-                call.parameters["filename"] ?: return@get call.respond(HttpStatusCode.BadRequest, "Filename required")
-            val file = File("/Users/user/Downloads/$filename")
+            val filename = call.parameters["filename"] ?: return@get call.respond(HttpStatusCode.BadRequest, "Filename required")
+            val file = File("$rootDirectory/$filename")
 
             if (file.exists()) {
                 serveCachedFile(call, file)
@@ -29,7 +29,7 @@ fun Application.configureRouting() {
 }
 
 fun generateETag(file: File): String {
-    val digest = MessageDigest.getInstance("SHA-1")
+    val digest = MessageDigest.getInstance("SHA-256")
     val hash = digest.digest(file.readBytes()).joinToString("") { "%02x".format(it) }
     return "\"$hash\""
 }
